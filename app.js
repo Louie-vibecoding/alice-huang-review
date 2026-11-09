@@ -1,0 +1,20 @@
+'use strict';
+const D = window.REVIEW;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const refs = ids => `<div class="refs">${ids.map(id => `<a href="#s-${esc(id)}">${esc(D.sources.find(s=>s.id===id).short)} ↗</a>`).join('')}</div>`;
+document.querySelector('#investigation-list').innerHTML = D.investigations.map(x=>`<article class="investigation"><div><span class="label ${x.type==='direct'?'direct':''}">${esc(x.status)}</span><time>${esc(x.date)}</time><h3>${esc(x.title)}</h3></div><div><p>${esc(x.body)}</p><p class="limit">${esc(x.limit)}</p>${refs(x.refs)}</div></article>`).join('');
+document.querySelector('#role-list').innerHTML = D.roles.map(x=>`<article class="role"><span class="badge">${esc(x.label)}</span><h3>${esc(x.title)}</h3><p class="definition">${esc(x.definition)}</p><div class="score" aria-label="公开证据支持度${x.score}分，满分10分">${x.score}<span>/ 10</span></div><p class="score-caption">主审对该角色的公开证据支持度</p><div class="meter" aria-hidden="true" style="--score:${x.score*10}%"><i></i></div><dl><dt>支持它的材料</dt><dd>${esc(x.support)}</dd><dt>限制与反证</dt><dd>${esc(x.limit)}</dd><dt>什么会改变判断</dt><dd>${esc(x.change)}</dd></dl>${refs(x.refs)}</article>`).join('');
+document.querySelector('#review-scores').innerHTML = `<p>${esc(D.scoreNote)}</p><div class="table-scroll"><table><thead><tr><th>评审</th><th>商业经营</th><th>资本/业务中介</th><th>被指情报角色</th></tr></thead><tbody>${D.reviews.map(x=>`<tr><td>${esc(x.name)}</td>${x.scores.map(s=>`<td>${esc(s)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+const kinds = {direct:'直接公开材料',reported:'报道与指控',limit:'反证与限制'};
+document.querySelector('#evidence-list').innerHTML = D.evidence.map(x=>`<article class="claim" data-kind="${x.type}"><div class="claim-head"><h3>${esc(x.title)}</h3><span class="label ${x.type==='direct'?'direct':''}">${kinds[x.type]}</span></div><p>${esc(x.body)}</p><details><summary>证明范围与不能推出的结论</summary><p>${esc(x.limit)}</p>${refs(x.refs)}</details></article>`).join('');
+const filterButtons = [...document.querySelectorAll('[data-filter]')];
+function filter(kind){let shown=0;document.querySelectorAll('.claim').forEach(el=>{el.hidden=kind!=='all'&&el.dataset.kind!==kind;if(!el.hidden)shown++});filterButtons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===kind)));document.querySelector('#filter-count').textContent=`显示 ${shown} / ${D.evidence.length} 条证据记录`;}
+filterButtons.forEach(b=>b.addEventListener('click',()=>filter(b.dataset.filter)));filter('all');
+document.querySelector('#timeline-list').innerHTML = D.timeline.map(x=>`<li><time>${esc(x.date)}</time><div><h3>${esc(x.title)}</h3><p>${esc(x.body)}</p>${refs(x.refs)}</div></li>`).join('');
+document.querySelector('#debate-list').innerHTML = D.debates.map(x=>`<article class="debate"><h3>${esc(x.title)}</h3><p>${esc(x.challenge)}</p><p class="decision"><b>主审处理：</b>${esc(x.decision)}</p></article>`).join('');
+document.querySelector('#coverage-list').innerHTML = D.coverage.map(x=>`<p><b>${esc(x.platform)}：</b>${esc(x.scope)}</p>`).join('');
+document.querySelector('#source-list').innerHTML = D.sources.map((x,i)=>`<article id="s-${esc(x.id)}" class="source"><b>来源 ${String(i+1).padStart(2,'0')}</b><div><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.title)} ↗</a><p>${esc(x.date)} · ${esc(x.scope)}</p></div></article>`).join('');
+document.querySelector('#source-count').textContent=`${D.sources.length} 项 · 保留同源关系`;
+const navLinks=[...document.querySelectorAll('nav a')];
+const observer=new IntersectionObserver(entries=>{for(const en of entries){if(en.isIntersecting){navLinks.forEach(a=>{const yes=a.hash===`#${en.target.id}`;a.classList.toggle('active',yes);if(yes)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current')})}}},{rootMargin:'-10% 0px -70% 0px'});
+document.querySelectorAll('main section[id]').forEach(el=>observer.observe(el));
