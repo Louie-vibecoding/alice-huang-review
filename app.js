@@ -18,3 +18,4 @@ document.querySelector('#source-count').textContent=`${D.sources.length} 项 · 
 const navLinks=[...document.querySelectorAll('nav a')];
 const observer=new IntersectionObserver(entries=>{for(const en of entries){if(en.isIntersecting){navLinks.forEach(a=>{const yes=a.hash===`#${en.target.id}`;a.classList.toggle('active',yes);if(yes)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current')})}}},{rootMargin:'-10% 0px -70% 0px'});
 document.querySelectorAll('main section[id]').forEach(el=>observer.observe(el));
+observer.observe(document.querySelector('.hero'));
